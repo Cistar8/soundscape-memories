@@ -62,7 +62,7 @@ body::before {
   font-size: 24px;
   color: var(--accent-dark);
   letter-spacing: 3px;
-  margin-top: 28px;
+  margin-top: 40px;
   margin-bottom: 8px;
   text-align: center;
   position: relative;
@@ -91,6 +91,7 @@ body::before {
   width: 320px;
   height: 320px;
   flex-shrink: 0;
+  margin-top: 20px;
 }
 
 /* 唱片 */
@@ -230,13 +231,13 @@ body::before {
   line-height: 1;
 }
 
-/* 城市图标位置 - 围绕唱片边缘 */
+/* 5个城市图标 - 五角星均匀排布 */
+/* 以唱片中心为原点，半径140px，从顶部开始顺时针72度间隔 */
 .city-icon[data-city="hongkong"]  { top: -8px;   left: 50%;  margin-left: -22px; }
-.city-icon[data-city="chengdu"]   { top: 22px;  right: -8px; }
-.city-icon[data-city="shanghai"]  { bottom: 22px; right: -8px; }
+.city-icon[data-city="chengdu"]   { top: 50px;  right: -16px; }
+.city-icon[data-city="shanghai"]  { bottom: 50px; right: -16px; }
 .city-icon[data-city="beijing"]   { bottom: -8px; left: 50%; margin-left: -22px; }
-.city-icon[data-city="nanjing"]   { bottom: 22px; left: -8px; }
-.city-icon[data-city="newyork"]   { top: 22px;  left: -8px; }
+.city-icon[data-city="nanjing"]   { top: 50%;  left: -16px; margin-top: -22px; }
 
 /* 提示文字 */
 .hint {
@@ -250,14 +251,14 @@ body::before {
 
 /* 底部按钮 */
 .bottom-btn {
-  margin-top: auto;
+  margin-top: 24px;
   margin-bottom: 28px;
-  padding: 10px 24px;
+  padding: 14px 36px;
   border: 1.5px dashed var(--accent);
-  border-radius: 24px;
+  border-radius: 28px;
   background: transparent;
   color: var(--accent-dark);
-  font-size: 14px;
+  font-size: 17px;
   font-family: 'XianSheng', Georgia, serif;
   cursor: pointer;
   transition: all 0.2s;
@@ -527,7 +528,7 @@ body::before {
         <div class="label-text">SOUND<br>SCAPE</div>
       </div>
 
-      <!-- 6个城市图标 - 随唱片旋转 -->
+      <!-- 5个城市图标 - 围绕唱片边缘均匀排布 -->
       <div class="city-icon" data-city="hongkong" onclick="openCity('hongkong')">
         <span class="city-emoji">🏙️</span>
       </div>
@@ -542,9 +543,6 @@ body::before {
       </div>
       <div class="city-icon" data-city="nanjing" onclick="openCity('nanjing')">
         <span class="city-emoji">🌸</span>
-      </div>
-      <div class="city-icon" data-city="newyork" onclick="openCity('newyork')">
-        <span class="city-emoji">🗽</span>
       </div>
     </div>
   </div>
@@ -580,13 +578,13 @@ body::before {
 
     <!-- 音频播放器 -->
     <div class="audio-player" id="audioPlayer">
-      <audio id="cityAudio" controls></audio>
+      <audio id="cityAudio" controls playsinline webkit-playsinline></audio>
     </div>
   </div>
 </div>
 
 <script>
-// ====== 城市数据 ======
+// ====== 城市数据（5个城市） ======
 const cityData = {
   hongkong: {
     name: '香港',
@@ -622,13 +620,6 @@ const cityData = {
     music: '《恋爱通告》',
     audio: 'nanjing.mp3',
     hasLocalAudio: true
-  },
-  newyork: {
-    name: '纽约',
-    emoji: '🗽',
-    music: '《Empire State of Mind》',
-    audio: '',
-    hasLocalAudio: false
   }
 };
 
@@ -681,12 +672,10 @@ function startGuess() {
   document.getElementById('modalActions').style.display = 'none';
 
   if (data.hasLocalAudio) {
-    // 有本地音频，直接播放
     playAudio(data.audio);
     document.getElementById('audioPlayer').classList.add('active');
     showToast('请根据旋律猜城市 🎵');
   } else {
-    // 跳转网易云搜索
     const query = encodeURIComponent(data.music.replace(/[《》]/g, ''));
     window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
     showToast('请去网易云试听后再猜');
@@ -700,11 +689,12 @@ function startGuess() {
 function playAudio(audioSrc) {
   const audio = document.getElementById('cityAudio');
   audio.src = audioSrc;
+  audio.load();
   
   audio.play().then(() => {
     // 播放成功
   }).catch((error) => {
-    // 自动播放被阻止，显示播放器让用户手动点击
+    // 自动播放被阻止，提示用户手动点击
     showToast('请点击播放按钮开始试听');
   });
 }
@@ -724,7 +714,6 @@ function submitGuess() {
   if (guess === data.name) {
     resultEl.textContent = '🎉 猜对了！就是' + data.name;
     resultEl.className = 'guess-result correct';
-    // 揭晓城市名
     const cityEl = document.getElementById('modalCity');
     cityEl.textContent = data.name;
     cityEl.classList.remove('hidden-city');
@@ -740,16 +729,12 @@ function revealCity() {
   const data = cityData[currentCity];
   if (!data) return;
 
-  // 显示城市名
   const cityEl = document.getElementById('modalCity');
   cityEl.textContent = data.name;
   cityEl.classList.remove('hidden-city');
   cityRevealed = true;
 
-  // 隐藏模式按钮
   document.getElementById('modalActions').style.display = 'none';
-
-  // 显示试听按钮
   document.getElementById('listenBtn').classList.add('active');
 }
 

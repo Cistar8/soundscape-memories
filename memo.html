@@ -496,6 +496,9 @@ body::before {
 
 <div class="toast" id="toast"></div>
 
+<!-- 音频播放器 -->
+<audio id="memoAudio" controls playsinline webkit-playsinline style="display:none;"></audio>
+
 <div class="header">
   <h1>声景回忆便签板</h1>
 </div>
@@ -968,10 +971,34 @@ function deleteCard(filteredIndex) {
   showToast('已删除');
 }
 
+// ====== 城市音频映射 ======
+const cityAudioMap = {
+  '香港': 'hongkong.mp3',
+  '成都': 'chengdu.mp3',
+  '上海': 'shanghai.aac',
+  '北京': 'beijing.mp3',
+  '南京': 'nanjing.mp3'
+};
+
 function listenMusic(filteredIndex) {
   const card = filteredCards[filteredIndex];
-  const query = encodeURIComponent(card.music.replace(/[《》]/g, ''));
-  window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+  const audioFile = cityAudioMap[card.city];
+  
+  if (audioFile) {
+    const audio = document.getElementById('memoAudio');
+    audio.src = audioFile;
+    audio.style.display = 'block';
+    audio.load();
+    audio.play().then(() => {
+      // 播放成功
+    }).catch((error) => {
+      showToast('请点击播放按钮开始试听');
+    });
+  } else {
+    // 没有本地音频，跳转网易云
+    const query = encodeURIComponent(card.music.replace(/[《》]/g, ''));
+    window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+  }
 }
 
 function showToast(msg) {
