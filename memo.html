@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>声景回忆便签板</title>
+<style>
+@font-face {
+  font-family: 'XianSheng';
+  src: url('XianSheng-GaiZenMeChengNi-2.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f0e8;
+  --card-bg: #fffdf7;
+  --accent: #c4956a;
+  --accent-dark: #a07850;
+  --text: #4a3f35;
+  --text-light: #8a7e72;
+  --shadow: rgba(120, 100, 70, 0.15);
+  --radius: 14px;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.header {
+  padding: 16px 20px 8px;
+  text-align: center;
+  position: relative;
+}
+.header h1 {
+  font-family: 'XianSheng', Georgia, 'Noto Serif SC', serif;
+  font-size: 26px;
+  color: var(--accent-dark);
+  letter-spacing: 2px;
+  position: relative;
+  display: inline-block;
+}
+.header h1::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.4;
+  border-radius: 1px;
+}
+
+.search-bar {
+  padding: 8px 20px 12px;
+}
+.search-bar input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid #ddd5c8;
+  border-radius: 24px;
+  background: var(--card-bg);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.3s;
+}
+.search-bar input::placeholder {
+  color: var(--text-light);
+  opacity: 0.6;
+}
+.search-bar input:focus {
+  border-color: var(--accent);
+}
+
+.card-viewport {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 0 5%;
+}
+.card-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: transform;
+}
+.card-wrapper {
+  min-width: 100%;
+  padding: 0 2.5%;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 12px var(--shadow), 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+  position: relative;
+  transform: rotate(var(--rotate, 0deg));
+  transition: transform 0.3s;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(180deg, rgba(196,149,106,0.12) 0%, transparent 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  z-index: 1;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 60px;
+  height: 18px;
+  background: rgba(196,149,106,0.25);
+  border-radius: 2px;
+  z-index: 2;
+}
+
+.card-image-wrap {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.card-image-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  object-fit: cover;
+  max-height: 280px;
+}
+
+.card-body {
+  padding: 14px 18px 16px;
+}
+.card-music {
+  font-family: 'XianSheng', Georgia, serif;
+  font-size: 18px;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-music .music-icon {
+  font-size: 16px;
+}
+.card-city {
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card-city .city-label {
+  color: var(--text-light);
+  font-size: 13px;
+}
+.card-city .city-name {
+  font-weight: 600;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-listen {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-listen:hover { background: var(--accent-dark); }
+.btn-delete {
+  background: transparent;
+  color: #c0a090;
+  border: 1.5px solid #e0d5c8;
+}
+.btn-delete:hover {
+  background: #f5e0d8;
+  color: #b06050;
+  border-color: #d8b8a8;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  gap: 20px;
+}
+.page-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid #d8cfc0;
+  background: var(--card-bg);
+  color: var(--accent-dark);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  user-select: none;
+}
+.page-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  background: var(--card-bg);
+  color: var(--text-light);
+  border-color: #e0d8d0;
+}
+.page-indicator {
+  font-size: 14px;
+  color: var(--text-light);
+  min-width: 50px;
+  text-align: center;
+  font-family: Georgia, serif;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+.empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.empty-state p {
+  font-size: 15px;
+}
+
+.add-btn-wrap {
+  padding: 0 20px 20px;
+  text-align: center;
+}
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 28px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-family: 'XianSheng', Georgia, serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-btn:hover {
+  background: var(--accent-dark);
+}
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: 1.5px solid #d8cfc0;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+.reset-btn:hover {
+  background: #f5e0d8;
+  color: #b06050;
+  border-color: #d8b8a8;
+}
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 28px;
+  background: #b8845a;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'XianSheng', Georgia, serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover {
+  background: #a07850;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(60,50,40,0.45);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-content {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 22px 32px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.modal-header h2 {
+  font-family: 'XianSheng', Georgia, serif;
+  font-size: 20px;
+  color: var(--accent-dark);
+}
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f0e8dc;
+  color: var(--text-light);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #ddd5c8;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.3s;
+}
+.form-group input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.image-upload {
+  border: 2px dashed #d8cfc0;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.image-upload:hover {
+  border-color: var(--accent);
+  background: rgba(196,149,106,0.05);
+}
+.image-upload .upload-icon {
+  font-size: 28px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.image-upload .upload-text {
+  font-size: 13px;
+  color: var(--text-light);
+}
+.image-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.image-upload .preview-img {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 8px;
+  display: none;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 24px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-family: 'XianSheng', Georgia, serif;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+.submit-btn:hover {
+  background: var(--accent-dark);
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  background: var(--accent-dark);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  z-index: 300;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <h1>声景回忆便签板</h1>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="搜索城市..." autocomplete="off">
+</div>
+
+<div class="card-viewport" id="cardViewport">
+  <div class="card-track" id="cardTrack">
+  </div>
+</div>
+
+<div class="empty-state" id="emptyState" style="display:none;">
+  <div class="empty-icon">📭</div>
+  <p>还没有回忆卡片</p>
+</div>
+
+<div class="pagination" id="pagination">
+  <button class="page-btn" id="prevBtn" onclick="prevCard()">‹</button>
+  <span class="page-indicator" id="pageIndicator">0 / 0</span>
+  <button class="page-btn" id="nextBtn" onclick="nextCard()">›</button>
+</div>
+
+<div class="add-btn-wrap">
+  <div class="btn-row">
+    <button class="add-btn" onclick="openModal()">＋ 添加新回忆</button>
+    <button class="back-btn" onclick="goToTurntable()">🎵 返回唱片机</button>
+  </div>
+  <button class="reset-btn" onclick="resetData()">重置</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>添加新回忆</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>选择图片（限2MB）</label>
+      <div class="image-upload" id="imageUpload">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">点击选择图片</div>
+        <input type="file" accept="image/*" id="imageInput" onchange="handleImageSelect(event)">
+        <img class="preview-img" id="previewImg">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>城市名称</label>
+      <input type="text" id="cityInput" placeholder="例如：成都">
+    </div>
+    <div class="form-group">
+      <label>音乐名称</label>
+      <input type="text" id="musicInput" placeholder="例如：《可能》">
+    </div>
+    <button class="submit-btn" onclick="submitCard()">保存回忆</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'soundscape_memories';
+let cards = [];
+let filteredCards = [];
+let currentIndex = 0;
+let uploadedImage = null;
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      cards = JSON.parse(raw);
+    }
+  } catch (e) {
+    cards = [];
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  } catch (e) {
+    showToast('存储空间不足，请删除部分卡片');
+  }
+}
+
+function generateVinylQuestionImage() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#f5efe3';
+  ctx.fillRect(0, 0, 600, 400);
+
+  const imageData = ctx.getImageData(0, 0, 600, 400);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * 12;
+    imageData.data[i] += noise;
+    imageData.data[i + 1] += noise;
+    imageData.data[i + 2] += noise;
+  }
+  ctx.putImageData(imageData, 0, 0);
+
+  const cx = 300, cy = 200, outerR = 140;
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+  ctx.fillStyle = '#2a2420';
+  ctx.fill();
+
+  for (let r = 50; r <= outerR - 5; r += 4) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(60,50,40,${0.15 + Math.random() * 0.15})`;
+    ctx.lineWidth = 0.5 + Math.random() * 0.5;
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+  const gloss = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.08)');
+  gloss.addColorStop(0.4, 'rgba(255,255,255,0.02)');
+  gloss.addColorStop(0.6, 'rgba(255,255,255,0)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0.06)');
+  ctx.fillStyle = gloss;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+  const labelGrad = ctx.createRadialGradient(cx, cy, 5, cx, cy, 45);
+  labelGrad.addColorStop(0, '#d4a574');
+  labelGrad.addColorStop(1, '#b8845a');
+  ctx.fillStyle = labelGrad;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 45, 0, Math.PI * 2);
+  ctx.strokeStyle = '#a07050';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#2a2420';
+  ctx.fill();
+
+  ctx.save();
+  ctx.font = 'bold 42px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(80,50,30,0.2)';
+  ctx.fillText('?', cx + 1.5, cy + 1.5);
+  ctx.fillStyle = '#fffdf7';
+  ctx.fillText('?', cx, cy);
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(180,150,110,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8, 4]);
+  ctx.beginPath();
+  ctx.moveTo(15, 10);
+  ctx.lineTo(585, 12);
+  ctx.lineTo(588, 390);
+  ctx.lineTo(12, 388);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const cornerSize = 20;
+  ctx.strokeStyle = 'rgba(180,150,110,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(8, 28); ctx.lineTo(8, 8); ctx.lineTo(28, 8); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(572, 8); ctx.lineTo(592, 8); ctx.lineTo(592, 28); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(8, 372); ctx.lineTo(8, 392); ctx.lineTo(28, 392); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(572, 392); ctx.lineTo(592, 392); ctx.lineTo(592, 372); ctx.stroke();
+
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
+function initSampleData() {
+  if (cards.length > 0) return;
+  cards = [
+    {
+      id: Date.now(),
+      image: 'chengdu.png',
+      city: '成都',
+      music: '《可能》',
+      isSample: true
+    },
+    {
+      id: Date.now() + 1,
+      image: 'hongkong.jpg',
+      city: '香港',
+      music: '《Everywhere We Go》',
+      isSample: true
+    },
+    {
+      id: Date.now() + 2,
+      image: 'shanghai.png',
+      city: '上海',
+      music: '《今夜没回家》',
+      isSample: true
+    }
+  ];
+  saveData();
+}
+
+function compressImage(file, maxWidth, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      if (img.width <= maxWidth) {
+        callback(e.target.result);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      const ratio = maxWidth / img.width;
+      canvas.width = maxWidth;
+      canvas.height = Math.round(img.height * ratio);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', 0.75));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderCards() {
+  const track = document.getElementById('cardTrack');
+  const empty = document.getElementById('emptyState');
+  const pagination = document.getElementById('pagination');
+
+  if (filteredCards.length === 0) {
+    track.innerHTML = '';
+    empty.style.display = 'block';
+    pagination.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  pagination.style.display = 'flex';
+
+  if (currentIndex >= filteredCards.length) {
+    currentIndex = filteredCards.length - 1;
+  }
+  if (currentIndex < 0) currentIndex = 0;
+
+  const rotations = [-1.2, 0.5, -0.8, 1, 0.3, -0.5, 0.8, -1, 0.6, -0.3];
+
+  track.innerHTML = filteredCards.map((card, i) => {
+    const rot = rotations[i % rotations.length];
+    const imgSrc = card.image;
+    const isDataUri = imgSrc && imgSrc.startsWith('data:');
+    const safeSrc = isDataUri ? imgSrc : escapeAttr(imgSrc);
+
+    return `<div class="card-wrapper">
+      <div class="card" style="--rotate: ${rot}deg">
+        <div class="card-image-wrap">
+          <img src="${safeSrc}" alt="回忆图片" onerror="this.style.display='none'">
+        </div>
+        <div class="card-body">
+          <div class="card-music">
+            <span class="music-icon">🎵</span>
+            ${escapeHtml(card.music)}
+          </div>
+          <div class="card-city">
+            <span class="city-label">城市：</span>
+            <span class="city-name">${escapeHtml(card.city)}</span>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-listen" onclick="listenMusic(${i})">🎧 试听</button>
+            <button class="btn btn-delete" onclick="deleteCard(${i})">删除</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateSlider();
+  updatePagination();
+}
+
+function updateSlider() {
+  const track = document.getElementById('cardTrack');
+  const offset = -currentIndex * 100;
+  track.style.transform = `translateX(${offset}%)`;
+}
+
+function updatePagination() {
+  const indicator = document.getElementById('pageIndicator');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  if (filteredCards.length === 0) {
+    indicator.textContent = '0 / 0';
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+
+  indicator.textContent = `${currentIndex + 1} / ${filteredCards.length}`;
+  prevBtn.disabled = currentIndex <= 0;
+  nextBtn.disabled = currentIndex >= filteredCards.length - 1;
+}
+
+function prevCard() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    updateSlider();
+    updatePagination();
+  }
+}
+
+function nextCard() {
+  if (currentIndex < filteredCards.length - 1) {
+    currentIndex++;
+    updateSlider();
+    updatePagination();
+  }
+}
+
+(function() {
+  let startX = 0;
+  let startY = 0;
+  let isDragging = false;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const viewport = document.getElementById('cardViewport');
+
+    viewport.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+    }, { passive: true });
+
+    viewport.addEventListener('touchmove', function(e) {
+      if (!isDragging) return;
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', function(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = startX - endX;
+      const diffY = startY - endY;
+
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+        if (diffX > 0) {
+          nextCard();
+        } else {
+          prevCard();
+        }
+      }
+    }, { passive: true });
+  });
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const keyword = this.value.trim().toLowerCase();
+    if (!keyword) {
+      filteredCards = [...cards];
+    } else {
+      filteredCards = cards.filter(c => c.city.toLowerCase().includes(keyword));
+    }
+    currentIndex = 0;
+    renderCards();
+  });
+});
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('cityInput').value = '';
+  document.getElementById('musicInput').value = '';
+  document.getElementById('imageInput').value = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.querySelector('.image-upload .upload-icon').style.display = '';
+  document.querySelector('.image-upload .upload-text').style.display = '';
+  uploadedImage = null;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    closeModal();
+  }
+}
+
+function handleImageSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('图片不能超过2MB');
+    e.target.value = '';
+    return;
+  }
+
+  compressImage(file, 800, function(base64) {
+    uploadedImage = base64;
+    const preview = document.getElementById('previewImg');
+    preview.src = base64;
+    preview.style.display = 'block';
+    document.querySelector('.image-upload .upload-icon').style.display = 'none';
+    document.querySelector('.image-upload .upload-text').style.display = 'none';
+  });
+}
+
+function submitCard() {
+  const city = document.getElementById('cityInput').value.trim();
+  const music = document.getElementById('musicInput').value.trim();
+
+  if (!city) {
+    showToast('请输入城市名称');
+    return;
+  }
+  if (!music) {
+    showToast('请输入音乐名称');
+    return;
+  }
+
+  const newCard = {
+    id: Date.now(),
+    image: uploadedImage || '',
+    city: city,
+    music: music,
+    isSample: false
+  };
+
+  cards.push(newCard);
+  saveData();
+
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!keyword || city.toLowerCase().includes(keyword)) {
+    filteredCards = keyword
+      ? cards.filter(c => c.city.toLowerCase().includes(keyword))
+      : [...cards];
+    currentIndex = filteredCards.length - 1;
+  }
+
+  renderCards();
+  closeModal();
+  showToast('回忆已添加 ✨');
+}
+
+function deleteCard(filteredIndex) {
+  const card = filteredCards[filteredIndex];
+  const realIndex = cards.findIndex(c => c.id === card.id);
+  if (realIndex === -1) return;
+
+  cards.splice(realIndex, 1);
+  saveData();
+
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  filteredCards = keyword
+    ? cards.filter(c => c.city.toLowerCase().includes(keyword))
+    : [...cards];
+
+  if (currentIndex >= filteredCards.length) {
+    currentIndex = Math.max(0, filteredCards.length - 1);
+  }
+
+  renderCards();
+  showToast('已删除');
+}
+
+function listenMusic(filteredIndex) {
+  const card = filteredCards[filteredIndex];
+  const query = encodeURIComponent(card.music.replace(/[《》]/g, ''));
+  window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function resetData() {
+  if (confirm('确定要重置所有回忆数据吗？此操作不可撤销。')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+function goToTurntable() {
+  window.location.href = 'index.html';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+  initSampleData();
+  filteredCards = [...cards];
+  currentIndex = 0;
+  renderCards();
+});
+</script>
+
+</body>
+</html>

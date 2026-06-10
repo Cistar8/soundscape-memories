@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>声景回忆便签板</title>
+<title>声景锚点</title>
 <style>
 @font-face {
   font-family: 'XianSheng';
@@ -16,13 +16,14 @@
 
 :root {
   --bg: #f5f0e8;
-  --card-bg: #fffdf7;
   --accent: #c4956a;
   --accent-dark: #a07850;
+  --accent-warm: #d4a55a;
   --text: #4a3f35;
   --text-light: #8a7e72;
-  --shadow: rgba(120, 100, 70, 0.15);
-  --radius: 14px;
+  --card-bg: rgba(255, 253, 247, 0.82);
+  --shadow: rgba(120, 100, 70, 0.18);
+  --radius: 18px;
 }
 
 html, body {
@@ -31,454 +32,460 @@ html, body {
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* 噪点纹理 */
+/* 纸张纹理 */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 256px 256px;
   pointer-events: none;
   z-index: 9999;
 }
 
-/* 顶部栏 */
-.header {
-  padding: 16px 20px 8px;
+/* 页面容器 */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px;
+}
+
+/* 标题 */
+.title {
+  font-family: 'XianSheng', Georgia, serif;
+  font-size: 24px;
+  color: var(--accent-dark);
+  letter-spacing: 3px;
+  margin-top: 28px;
+  margin-bottom: 8px;
   text-align: center;
   position: relative;
 }
-.header h1 {
-  font-family: 'XianSheng', Georgia, 'Noto Serif SC', serif;
-  font-size: 26px;
-  color: var(--accent-dark);
-  letter-spacing: 2px;
-  position: relative;
-  display: inline-block;
-}
-.header h1::after {
+.title::after {
   content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  display: block;
+  width: 60px;
   height: 2px;
   background: var(--accent);
-  opacity: 0.4;
+  opacity: 0.5;
+  margin: 8px auto 0;
   border-radius: 1px;
 }
 
-/* 搜索栏 */
-.search-bar {
-  padding: 8px 20px 12px;
-}
-.search-bar input {
-  width: 100%;
-  padding: 10px 16px;
-  border: 1.5px solid #ddd5c8;
-  border-radius: 24px;
-  background: var(--card-bg);
-  font-size: 14px;
-  color: var(--text);
-  outline: none;
-  transition: border-color 0.3s;
-}
-.search-bar input::placeholder {
+.subtitle {
+  font-size: 12px;
   color: var(--text-light);
-  opacity: 0.6;
-}
-.search-bar input:focus {
-  border-color: var(--accent);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
 }
 
-/* 卡片区域 */
-.card-viewport {
+/* 唱片机区域 */
+.turntable-area {
   position: relative;
-  width: 100%;
-  overflow: hidden;
-  padding: 0 5%;
-}
-.card-track {
-  display: flex;
-  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  will-change: transform;
-}
-.card-wrapper {
-  min-width: 100%;
-  padding: 0 2.5%;
-  display: flex;
-  justify-content: center;
+  width: 320px;
+  height: 320px;
+  flex-shrink: 0;
 }
 
-/* 卡片样式 - 手绘便签贴风格 */
-.card {
-  width: 100%;
-  max-width: 380px;
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  box-shadow: 0 3px 12px var(--shadow), 0 1px 3px rgba(0,0,0,0.06);
-  overflow: hidden;
-  position: relative;
-  transform: rotate(var(--rotate, 0deg));
-  transition: transform 0.3s;
-}
-.card::before {
-  content: '';
+/* 唱片 */
+.vinyl {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 28px;
-  background: linear-gradient(180deg, rgba(196,149,106,0.12) 0%, transparent 100%);
-  border-radius: var(--radius) var(--radius) 0 0;
-  z-index: 1;
-}
-/* 胶带效果 */
-.card::after {
-  content: '';
-  position: absolute;
-  top: -6px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 60px;
-  height: 18px;
-  background: rgba(196,149,106,0.25);
-  border-radius: 2px;
-  z-index: 2;
-}
-
-.card-image-wrap {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  margin-top: 10px;
-}
-.card-image-wrap img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 8px;
-  object-fit: cover;
-  max-height: 280px;
-}
-
-.card-body {
-  padding: 14px 18px 16px;
-}
-.card-music {
-  font-family: 'XianSheng', Georgia, serif;
-  font-size: 18px;
-  color: var(--accent-dark);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.card-music .music-icon {
-  font-size: 16px;
-}
-.card-city {
-  font-size: 15px;
-  color: var(--text);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.card-city .city-label {
-  color: var(--text-light);
-  font-size: 13px;
-}
-.card-city .city-name {
-  font-weight: 600;
-}
-
-.card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 14px;
-  border: none;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-.btn-listen {
-  background: var(--accent);
-  color: #fff;
-}
-.btn-listen:hover { background: var(--accent-dark); }
-.btn-delete {
-  background: transparent;
-  color: #c0a090;
-  border: 1.5px solid #e0d5c8;
-}
-.btn-delete:hover {
-  background: #f5e0d8;
-  color: #b06050;
-  border-color: #d8b8a8;
-}
-
-/* 翻页控制 */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 20px;
-  gap: 20px;
-}
-.page-btn {
-  width: 40px;
-  height: 40px;
+  width: 250px;
+  height: 250px;
+  margin-left: -125px;
+  margin-top: -125px;
   border-radius: 50%;
-  border: 1.5px solid #d8cfc0;
-  background: var(--card-bg);
-  color: var(--accent-dark);
-  font-size: 18px;
+  background: radial-gradient(
+    circle,
+    #b8845a 0%, #b8845a 14%,
+    #2a2420 14.5%, #2a2420 100%
+  );
+  box-shadow:
+    0 0 0 3px rgba(42,36,32,0.3),
+    0 4px 20px rgba(42,36,32,0.25),
+    inset 0 0 30px rgba(0,0,0,0.15);
+  animation: spin 20s linear infinite;
   cursor: pointer;
+  transition: box-shadow 0.3s;
+  overflow: visible;
+}
+.vinyl.paused {
+  animation-play-state: paused;
+}
+.vinyl::before {
+  content: '';
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #d4a574 0%, #c49060 60%, #a87848 100%);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
+}
+.vinyl::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #2a2420;
+  box-shadow: 0 0 0 2px #8a7060;
+}
+
+/* 黑胶纹路 */
+.vinyl-grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.vinyl-grooves::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at center,
+    transparent 0px,
+    transparent 3px,
+    rgba(60,50,40,0.12) 3px,
+    rgba(60,50,40,0.12) 3.5px
+  );
+}
+/* 光泽 */
+.vinyl-grooves::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.1) 0%,
+    rgba(255,255,255,0.02) 40%,
+    transparent 60%,
+    rgba(255,255,255,0.06) 100%
+  );
+}
+
+/* 中心标签文字 */
+.vinyl-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  width: 70px;
+}
+.vinyl-label .label-text {
+  font-family: 'XianSheng', Georgia, serif;
+  font-size: 10px;
+  color: #fffdf7;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 城市图标 */
+.city-icon {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(196,149,106,0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(120,100,70,0.12);
+  z-index: 10;
   user-select: none;
 }
-.page-btn:hover {
-  background: var(--accent);
-  color: #fff;
+.city-icon:hover, .city-icon:active {
+  transform: scale(1.15);
   border-color: var(--accent);
+  box-shadow: 0 3px 14px rgba(196,149,106,0.3);
 }
-.page-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-  background: var(--card-bg);
+.city-icon .city-emoji {
+  line-height: 1;
+}
+
+/* 城市图标位置 - 围绕唱片边缘 */
+.city-icon[data-city="hongkong"]  { top: -8px;   left: 50%;  margin-left: -22px; }
+.city-icon[data-city="chengdu"]   { top: 22px;  right: -8px; }
+.city-icon[data-city="shanghai"]  { bottom: 22px; right: -8px; }
+.city-icon[data-city="beijing"]   { bottom: -8px; left: 50%; margin-left: -22px; }
+.city-icon[data-city="nanjing"]   { bottom: 22px; left: -8px; }
+.city-icon[data-city="newyork"]   { top: 22px;  left: -8px; }
+
+/* 提示文字 */
+.hint {
+  font-size: 13px;
   color: var(--text-light);
-  border-color: #e0d8d0;
+  margin-top: 20px;
+  text-align: center;
+  letter-spacing: 1px;
+  opacity: 0.7;
 }
-.page-indicator {
+
+/* 底部按钮 */
+.bottom-btn {
+  margin-top: auto;
+  margin-bottom: 28px;
+  padding: 10px 24px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 24px;
+  background: transparent;
+  color: var(--accent-dark);
   font-size: 14px;
-  color: var(--text-light);
-  min-width: 50px;
-  text-align: center;
-  font-family: Georgia, serif;
+  font-family: 'XianSheng', Georgia, serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
 }
-
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-light);
-}
-.empty-state .empty-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-  opacity: 0.4;
-}
-.empty-state p {
-  font-size: 15px;
-}
-
-/* 添加按钮 */
-.add-btn-wrap {
-  padding: 0 20px 20px;
-  text-align: center;
-}
-.btn-row {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-.add-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 28px;
-  border: none;
-  border-radius: 28px;
+.bottom-btn:hover {
   background: var(--accent);
   color: #fff;
-  font-size: 15px;
-  font-family: 'XianSheng', Georgia, serif;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.add-btn:hover {
-  background: var(--accent-dark);
-}
-.reset-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border: 1.5px solid #d8cfc0;
-  border-radius: 20px;
-  background: transparent;
-  color: var(--text-light);
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 10px;
-}
-.reset-btn:hover {
-  background: #f5e0d8;
-  color: #b06050;
-  border-color: #d8b8a8;
-}
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 28px;
-  border: none;
-  border-radius: 28px;
-  background: #b8845a;
-  color: #fff;
-  font-size: 15px;
-  font-family: 'XianSheng', Georgia, serif;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.back-btn:hover {
-  background: #a07850;
+  border-style: solid;
 }
 
-/* 弹出表单 */
+/* ====== 模态卡片 ====== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(60,50,40,0.45);
+  background: rgba(50,40,30,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 100;
-  display: none;
-  align-items: flex-end;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
 }
 .modal-overlay.active {
-  display: flex;
+  opacity: 1;
+  pointer-events: auto;
 }
-.modal-content {
+
+.modal-card {
+  width: 88%;
+  max-width: 360px;
   background: var(--card-bg);
-  width: 100%;
-  max-width: 480px;
-  border-radius: 20px 20px 0 0;
-  padding: 24px 22px 32px;
-  max-height: 85vh;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(42,36,32,0.2);
+  padding: 28px 24px 24px;
+  transform: translateY(60px);
+  transition: transform 0.4s cubic-bezier(0.22, 0.9, 0.36, 1);
+  position: relative;
 }
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.modal-overlay.active .modal-card {
+  transform: translateY(0);
 }
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-.modal-header h2 {
-  font-family: 'XianSheng', Georgia, serif;
-  font-size: 20px;
-  color: var(--accent-dark);
-}
+
 .modal-close {
-  width: 32px;
-  height: 32px;
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
-  background: #f0e8dc;
+  background: rgba(196,149,106,0.12);
   color: var(--text-light);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
+}
+.modal-close:hover {
+  background: rgba(196,149,106,0.25);
 }
 
-.form-group {
+.modal-emoji {
+  font-size: 36px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.modal-city {
+  font-family: 'XianSheng', Georgia, serif;
+  font-size: 28px;
+  color: var(--accent-dark);
+  text-align: center;
+  margin-bottom: 4px;
+  min-height: 38px;
+}
+.modal-city.hidden-city {
+  color: var(--accent);
+  letter-spacing: 6px;
+}
+
+.modal-music {
+  font-size: 16px;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: 'XianSheng', Georgia, serif;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 16px;
 }
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--text-light);
-  margin-bottom: 6px;
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
 }
-.form-group input[type="text"] {
+.action-btn.guess {
+  background: var(--accent);
+  color: #fff;
+}
+.action-btn.guess:hover {
+  background: var(--accent-dark);
+}
+.action-btn.reveal {
+  background: rgba(196,149,106,0.12);
+  color: var(--accent-dark);
+  border: 1.5px solid rgba(196,149,106,0.3);
+}
+.action-btn.reveal:hover {
+  background: rgba(196,149,106,0.22);
+}
+
+/* 猜城市输入区 */
+.guess-area {
+  display: none;
+  text-align: center;
+  margin-top: 12px;
+  animation: fadeIn 0.3s ease;
+}
+.guess-area.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.guess-input {
   width: 100%;
   padding: 10px 14px;
   border: 1.5px solid #ddd5c8;
   border-radius: 10px;
   background: #fff;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text);
   outline: none;
+  text-align: center;
+  margin-bottom: 10px;
   transition: border-color 0.3s;
 }
-.form-group input[type="text"]:focus {
+.guess-input:focus {
   border-color: var(--accent);
 }
 
-.image-upload {
-  border: 2px dashed #d8cfc0;
-  border-radius: 12px;
-  padding: 24px;
-  text-align: center;
+.guess-submit {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
+  transition: background 0.2s;
 }
-.image-upload:hover {
-  border-color: var(--accent);
-  background: rgba(196,149,106,0.05);
+.guess-submit:hover {
+  background: var(--accent-dark);
 }
-.image-upload .upload-icon {
-  font-size: 28px;
-  color: var(--accent);
-  margin-bottom: 6px;
+
+.guess-result {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 20px;
 }
-.image-upload .upload-text {
-  font-size: 13px;
-  color: var(--text-light);
+.guess-result.correct {
+  color: #6a9a5a;
 }
-.image-upload input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+.guess-result.wrong {
+  color: #c07050;
 }
-.image-upload .preview-img {
-  max-width: 100%;
-  max-height: 160px;
-  border-radius: 8px;
+
+/* 试听按钮 */
+.listen-btn {
   display: none;
-}
-
-.submit-btn {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 24px;
+  border-radius: 12px;
   background: var(--accent);
   color: #fff;
-  font-size: 16px;
-  font-family: 'XianSheng', Georgia, serif;
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
   margin-top: 8px;
 }
-.submit-btn:hover {
+.listen-btn.active {
+  display: flex;
+}
+.listen-btn:hover {
   background: var(--accent-dark);
+}
+
+/* 音频播放器 */
+.audio-player {
+  display: none;
+  margin-top: 12px;
+}
+.audio-player.active {
+  display: block;
+}
+.audio-player audio {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
 }
 
 /* 提示消息 */
@@ -496,6 +503,7 @@ body::before {
   opacity: 0;
   transition: all 0.3s;
   pointer-events: none;
+  white-space: nowrap;
 }
 .toast.show {
   transform: translateX(-50%) translateY(0);
@@ -505,443 +513,274 @@ body::before {
 </head>
 <body>
 
-<!-- 提示消息 -->
 <div class="toast" id="toast"></div>
 
-<!-- 顶部 -->
-<div class="header">
-  <h1>声景回忆便签板</h1>
-</div>
+<div class="page">
+  <!-- 标题 -->
+  <h1 class="title">声景锚点</h1>
 
-<!-- 搜索 -->
-<div class="search-bar">
-  <input type="text" id="searchInput" placeholder="搜索城市..." autocomplete="off">
-</div>
+  <!-- 唱片机 -->
+  <div class="turntable-area">
+    <div class="vinyl" id="vinyl">
+      <div class="vinyl-grooves"></div>
+      <div class="vinyl-label">
+        <div class="label-text">SOUND<br>SCAPE</div>
+      </div>
 
-<!-- 卡片区域 -->
-<div class="card-viewport" id="cardViewport">
-  <div class="card-track" id="cardTrack">
-    <!-- 卡片动态生成 -->
-  </div>
-</div>
-
-<!-- 空状态 -->
-<div class="empty-state" id="emptyState" style="display:none;">
-  <div class="empty-icon">📭</div>
-  <p>还没有回忆卡片</p>
-</div>
-
-<!-- 翻页 -->
-<div class="pagination" id="pagination">
-  <button class="page-btn" id="prevBtn" onclick="prevCard()">‹</button>
-  <span class="page-indicator" id="pageIndicator">0 / 0</span>
-  <button class="page-btn" id="nextBtn" onclick="nextCard()">›</button>
-</div>
-
-<!-- 添加按钮 -->
-<div class="add-btn-wrap">
-  <div class="btn-row">
-    <button class="add-btn" onclick="openModal()">＋ 添加新回忆</button>
-    <button class="back-btn" onclick="goToTurntable()">🎵 返回唱片机</button>
-  </div>
-  <button class="reset-btn" onclick="resetData()">重置</button>
-</div>
-
-<!-- 添加表单弹窗 -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>添加新回忆</h2>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="form-group">
-      <label>选择图片（限2MB）</label>
-      <div class="image-upload" id="imageUpload">
-        <div class="upload-icon">📷</div>
-        <div class="upload-text">点击选择图片</div>
-        <input type="file" accept="image/*" id="imageInput" onchange="handleImageSelect(event)">
-        <img class="preview-img" id="previewImg">
+      <!-- 6个城市图标 - 随唱片旋转 -->
+      <div class="city-icon" data-city="hongkong" onclick="openCity('hongkong')">
+        <span class="city-emoji">🏙️</span>
+      </div>
+      <div class="city-icon" data-city="chengdu" onclick="openCity('chengdu')">
+        <span class="city-emoji">🎋</span>
+      </div>
+      <div class="city-icon" data-city="shanghai" onclick="openCity('shanghai')">
+        <span class="city-emoji">🌆</span>
+      </div>
+      <div class="city-icon" data-city="beijing" onclick="openCity('beijing')">
+        <span class="city-emoji">🏯</span>
+      </div>
+      <div class="city-icon" data-city="nanjing" onclick="openCity('nanjing')">
+        <span class="city-emoji">🌸</span>
+      </div>
+      <div class="city-icon" data-city="newyork" onclick="openCity('newyork')">
+        <span class="city-emoji">🗽</span>
       </div>
     </div>
-    <div class="form-group">
-      <label>城市名称</label>
-      <input type="text" id="cityInput" placeholder="例如：成都">
+  </div>
+
+  <p class="hint">点击城市图标，开启声景之旅</p>
+
+  <!-- 底部按钮 -->
+  <button class="bottom-btn" onclick="goToMemo()">📝 添加我的声景</button>
+</div>
+
+<!-- 模态卡片 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-emoji" id="modalEmoji"></div>
+    <div class="modal-city" id="modalCity"></div>
+    <div class="modal-music" id="modalMusic"></div>
+
+    <div class="modal-actions" id="modalActions">
+      <button class="action-btn guess" onclick="startGuess()">🎵 听音乐猜城市</button>
+      <button class="action-btn reveal" onclick="revealCity()">🏙️ 直接揭晓答案~</button>
     </div>
-    <div class="form-group">
-      <label>音乐名称</label>
-      <input type="text" id="musicInput" placeholder="例如：《可能》">
+
+    <!-- 猜城市输入区 -->
+    <div class="guess-area" id="guessArea">
+      <input type="text" class="guess-input" id="guessInput" placeholder="输入你猜的城市名">
+      <button class="guess-submit" onclick="submitGuess()">确认</button>
+      <div class="guess-result" id="guessResult"></div>
     </div>
-    <button class="submit-btn" onclick="submitCard()">保存回忆</button>
+
+    <!-- 试听按钮 -->
+    <button class="listen-btn" id="listenBtn" onclick="playMusic()">🎧 试听歌曲</button>
+
+    <!-- 音频播放器 -->
+    <div class="audio-player" id="audioPlayer">
+      <audio id="cityAudio" controls></audio>
+    </div>
   </div>
 </div>
 
 <script>
-// ====== 数据管理 ======
-const STORAGE_KEY = 'soundscape_memories';
-let cards = [];
-let filteredCards = [];
-let currentIndex = 0;
-let uploadedImage = null;
-
-// 加载数据
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      cards = JSON.parse(raw);
-    }
-  } catch (e) {
-    cards = [];
+// ====== 城市数据 ======
+const cityData = {
+  hongkong: {
+    name: '香港',
+    emoji: '🏙️',
+    music: '《Everywhere We Go》',
+    audio: 'hongkong.mp3',
+    hasLocalAudio: true
+  },
+  chengdu: {
+    name: '成都',
+    emoji: '🎋',
+    music: '《可能》',
+    audio: 'chengdu.mp3',
+    hasLocalAudio: true
+  },
+  shanghai: {
+    name: '上海',
+    emoji: '🌆',
+    music: '《今夜没回家》',
+    audio: 'shanghai.aac',
+    hasLocalAudio: true
+  },
+  beijing: {
+    name: '北京',
+    emoji: '🏯',
+    music: '《安河桥》',
+    audio: 'beijing.mp3',
+    hasLocalAudio: true
+  },
+  nanjing: {
+    name: '南京',
+    emoji: '🌸',
+    music: '《恋爱通告》',
+    audio: 'nanjing.mp3',
+    hasLocalAudio: true
+  },
+  newyork: {
+    name: '纽约',
+    emoji: '🗽',
+    music: '《Empire State of Mind》',
+    audio: '',
+    hasLocalAudio: false
   }
-}
+};
 
-// 保存数据
-function saveData() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-  } catch (e) {
-    showToast('存储空间不足，请删除部分卡片');
-  }
-}
+let currentCity = null;
+let cityRevealed = false;
 
-// 初始化示例数据
-// ====== 生成猜城市模式示例图片（复古手绘黑胶+问号） ======
-function generateVinylQuestionImage() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 400;
-  const ctx = canvas.getContext('2d');
+// ====== 打开城市卡片 ======
+function openCity(cityKey) {
+  const data = cityData[cityKey];
+  if (!data) return;
 
-  // 复古米白背景
-  ctx.fillStyle = '#f5efe3';
-  ctx.fillRect(0, 0, 600, 400);
+  currentCity = cityKey;
+  cityRevealed = false;
 
-  // 添加轻微纹理噪点
-  const imageData = ctx.getImageData(0, 0, 600, 400);
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * 12;
-    imageData.data[i] += noise;
-    imageData.data[i + 1] += noise;
-    imageData.data[i + 2] += noise;
-  }
-  ctx.putImageData(imageData, 0, 0);
+  // 暂停唱片旋转
+  document.getElementById('vinyl').classList.add('paused');
 
-  // 黑胶唱片 - 外圆
-  const cx = 300, cy = 200, outerR = 140;
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-  ctx.fillStyle = '#2a2420';
-  ctx.fill();
+  // 填充卡片内容
+  document.getElementById('modalEmoji').textContent = data.emoji;
+  document.getElementById('modalMusic').textContent = data.music;
 
-  // 黑胶纹路 - 同心圆
-  for (let r = 50; r <= outerR - 5; r += 4) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(60,50,40,${0.15 + Math.random() * 0.15})`;
-    ctx.lineWidth = 0.5 + Math.random() * 0.5;
-    ctx.stroke();
-  }
+  // 城市名默认隐藏
+  const cityEl = document.getElementById('modalCity');
+  cityEl.textContent = '????';
+  cityEl.classList.add('hidden-city');
 
-  // 光泽反射
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-  const gloss = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
-  gloss.addColorStop(0, 'rgba(255,255,255,0.08)');
-  gloss.addColorStop(0.4, 'rgba(255,255,255,0.02)');
-  gloss.addColorStop(0.6, 'rgba(255,255,255,0)');
-  gloss.addColorStop(1, 'rgba(255,255,255,0.06)');
-  ctx.fillStyle = gloss;
-  ctx.fill();
+  // 重置交互区
+  document.getElementById('modalActions').style.display = '';
+  document.getElementById('guessArea').classList.remove('active');
+  document.getElementById('guessResult').textContent = '';
+  document.getElementById('guessInput').value = '';
+  document.getElementById('listenBtn').classList.remove('active');
+  document.getElementById('audioPlayer').classList.remove('active');
 
-  // 中心标签 - 复古暖色
-  ctx.beginPath();
-  ctx.arc(cx, cy, 45, 0, Math.PI * 2);
-  const labelGrad = ctx.createRadialGradient(cx, cy, 5, cx, cy, 45);
-  labelGrad.addColorStop(0, '#d4a574');
-  labelGrad.addColorStop(1, '#b8845a');
-  ctx.fillStyle = labelGrad;
-  ctx.fill();
+  // 停止可能正在播放的音频
+  const audio = document.getElementById('cityAudio');
+  audio.pause();
+  audio.src = '';
 
-  // 标签边缘
-  ctx.beginPath();
-  ctx.arc(cx, cy, 45, 0, Math.PI * 2);
-  ctx.strokeStyle = '#a07050';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // 中心小孔
-  ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-  ctx.fillStyle = '#2a2420';
-  ctx.fill();
-
-  // 问号 - 手绘风格
-  ctx.save();
-  ctx.font = 'bold 42px Georgia, serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  // 阴影
-  ctx.fillStyle = 'rgba(80,50,30,0.2)';
-  ctx.fillText('?', cx + 1.5, cy + 1.5);
-  // 主文字
-  ctx.fillStyle = '#fffdf7';
-  ctx.fillText('?', cx, cy);
-  ctx.restore();
-
-  // 手绘装饰边框
-  ctx.strokeStyle = 'rgba(180,150,110,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([8, 4]);
-  // 轻微不规则的边框
-  ctx.beginPath();
-  ctx.moveTo(15, 10);
-  ctx.lineTo(585, 12);
-  ctx.lineTo(588, 390);
-  ctx.lineTo(12, 388);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // 四角小装饰
-  const cornerSize = 20;
-  ctx.strokeStyle = 'rgba(180,150,110,0.5)';
-  ctx.lineWidth = 1.5;
-  // 左上
-  ctx.beginPath();
-  ctx.moveTo(8, 28); ctx.lineTo(8, 8); ctx.lineTo(28, 8);
-  ctx.stroke();
-  // 右上
-  ctx.beginPath();
-  ctx.moveTo(572, 8); ctx.lineTo(592, 8); ctx.lineTo(592, 28);
-  ctx.stroke();
-  // 左下
-  ctx.beginPath();
-  ctx.moveTo(8, 372); ctx.lineTo(8, 392); ctx.lineTo(28, 392);
-  ctx.stroke();
-  // 右下
-  ctx.beginPath();
-  ctx.moveTo(572, 392); ctx.lineTo(592, 392); ctx.lineTo(592, 372);
-  ctx.stroke();
-
-  return canvas.toDataURL('image/jpeg', 0.85);
-}
-
-function initSampleData() {
-  if (cards.length > 0) return;
-  cards = [
-    {
-      id: Date.now(),
-      image: 'chengdu.png',
-      city: '成都',
-      music: '《可能》',
-      isSample: true
-    },
-    {
-      id: Date.now() + 1,
-      image: 'hongkong.jpg',
-      city: '香港',
-      music: '《Everywhere We Go》',
-      isSample: true
-    },
-    {
-      id: Date.now() + 2,
-      image: 'shanghai.png',
-      city: '上海',
-      music: '《今夜没回家》',
-      isSample: true
-    }
-  ];
-  saveData();
-}
-
-// ====== 图片压缩 ======
-function compressImage(file, maxWidth, callback) {
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = function() {
-      if (img.width <= maxWidth) {
-        callback(e.target.result);
-        return;
-      }
-      const canvas = document.createElement('canvas');
-      const ratio = maxWidth / img.width;
-      canvas.width = maxWidth;
-      canvas.height = Math.round(img.height * ratio);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      callback(canvas.toDataURL('image/jpeg', 0.75));
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-// ====== UI渲染 ======
-function renderCards() {
-  const track = document.getElementById('cardTrack');
-  const empty = document.getElementById('emptyState');
-  const pagination = document.getElementById('pagination');
-
-  if (filteredCards.length === 0) {
-    track.innerHTML = '';
-    empty.style.display = 'block';
-    pagination.style.display = 'none';
-    return;
-  }
-
-  empty.style.display = 'none';
-  pagination.style.display = 'flex';
-
-  // 确保索引有效
-  if (currentIndex >= filteredCards.length) {
-    currentIndex = filteredCards.length - 1;
-  }
-  if (currentIndex < 0) currentIndex = 0;
-
-  // 随机微旋转角度，增加手绘感
-  const rotations = [-1.2, 0.5, -0.8, 1, 0.3, -0.5, 0.8, -1, 0.6, -0.3];
-
-  track.innerHTML = filteredCards.map((card, i) => {
-    const rot = rotations[i % rotations.length];
-    const imgSrc = card.image;
-    const isDataUri = imgSrc && imgSrc.startsWith('data:');
-    const safeSrc = isDataUri ? imgSrc : escapeAttr(imgSrc);
-
-    return `<div class="card-wrapper">
-      <div class="card" style="--rotate: ${rot}deg">
-        <div class="card-image-wrap">
-          <img src="${safeSrc}" alt="回忆图片" onerror="this.style.display='none'">
-        </div>
-        <div class="card-body">
-          <div class="card-music">
-            <span class="music-icon">🎵</span>
-            ${escapeHtml(card.music)}
-          </div>
-          <div class="card-city">
-            <span class="city-label">城市：</span>
-            <span class="city-name">${escapeHtml(card.city)}</span>
-          </div>
-          <div class="card-actions">
-            <button class="btn btn-listen" onclick="listenMusic(${i})">🎧 试听</button>
-            <button class="btn btn-delete" onclick="deleteCard(${i})">删除</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  updateSlider();
-  updatePagination();
-}
-
-function updateSlider() {
-  const track = document.getElementById('cardTrack');
-  const offset = -currentIndex * 100;
-  track.style.transform = `translateX(${offset}%)`;
-}
-
-function updatePagination() {
-  const indicator = document.getElementById('pageIndicator');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-
-  if (filteredCards.length === 0) {
-    indicator.textContent = '0 / 0';
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    return;
-  }
-
-  indicator.textContent = `${currentIndex + 1} / ${filteredCards.length}`;
-  prevBtn.disabled = currentIndex <= 0;
-  nextBtn.disabled = currentIndex >= filteredCards.length - 1;
-}
-
-function prevCard() {
-  if (currentIndex > 0) {
-    currentIndex--;
-    updateSlider();
-    updatePagination();
-  }
-}
-
-function nextCard() {
-  if (currentIndex < filteredCards.length - 1) {
-    currentIndex++;
-    updateSlider();
-    updatePagination();
-  }
-}
-
-// ====== 触摸滑动 ======
-(function() {
-  let startX = 0;
-  let startY = 0;
-  let isDragging = false;
-
-  document.addEventListener('DOMContentLoaded', function() {
-    const viewport = document.getElementById('cardViewport');
-
-    viewport.addEventListener('touchstart', function(e) {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      isDragging = true;
-    }, { passive: true });
-
-    viewport.addEventListener('touchmove', function(e) {
-      if (!isDragging) return;
-    }, { passive: true });
-
-    viewport.addEventListener('touchend', function(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      const endX = e.changedTouches[0].clientX;
-      const endY = e.changedTouches[0].clientY;
-      const diffX = startX - endX;
-      const diffY = startY - endY;
-
-      // 水平滑动幅度大于垂直，且超过阈值
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-        if (diffX > 0) {
-          nextCard();
-        } else {
-          prevCard();
-        }
-      }
-    }, { passive: true });
-  });
-})();
-
-// ====== 搜索过滤 ======
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('searchInput').addEventListener('input', function() {
-    const keyword = this.value.trim().toLowerCase();
-    if (!keyword) {
-      filteredCards = [...cards];
-    } else {
-      filteredCards = cards.filter(c => c.city.toLowerCase().includes(keyword));
-    }
-    currentIndex = 0;
-    renderCards();
-  });
-});
-
-// ====== 弹窗操作 ======
-function openModal() {
+  // 显示卡片
   document.getElementById('modalOverlay').classList.add('active');
-  // 重置表单
-  document.getElementById('cityInput').value = '';
-  document.getElementById('musicInput').value = '';
-  document.getElementById('imageInput').value = '';
-  document.getElementById('previewImg').style.display = 'none';
-  document.querySelector('.image-upload .upload-icon').style.display = '';
-  document.querySelector('.image-upload .upload-text').style.display = '';
-  uploadedImage = null;
 }
 
+// ====== 听音乐猜城市 ======
+function startGuess() {
+  const data = cityData[currentCity];
+  if (!data) return;
+
+  // 隐藏模式按钮
+  document.getElementById('modalActions').style.display = 'none';
+
+  if (data.hasLocalAudio) {
+    // 有本地音频，直接播放
+    playAudio(data.audio);
+    document.getElementById('audioPlayer').classList.add('active');
+    showToast('请根据旋律猜城市 🎵');
+  } else {
+    // 跳转网易云搜索
+    const query = encodeURIComponent(data.music.replace(/[《》]/g, ''));
+    window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+    showToast('请去网易云试听后再猜');
+  }
+
+  // 显示猜谜输入区
+  document.getElementById('guessArea').classList.add('active');
+}
+
+// ====== 安全播放音频（兼容移动端） ======
+function playAudio(audioSrc) {
+  const audio = document.getElementById('cityAudio');
+  audio.src = audioSrc;
+  
+  audio.play().then(() => {
+    // 播放成功
+  }).catch((error) => {
+    // 自动播放被阻止，显示播放器让用户手动点击
+    showToast('请点击播放按钮开始试听');
+  });
+}
+
+// ====== 提交猜测 ======
+function submitGuess() {
+  const data = cityData[currentCity];
+  const guess = document.getElementById('guessInput').value.trim();
+  const resultEl = document.getElementById('guessResult');
+
+  if (!guess) {
+    resultEl.textContent = '请输入城市名';
+    resultEl.className = 'guess-result wrong';
+    return;
+  }
+
+  if (guess === data.name) {
+    resultEl.textContent = '🎉 猜对了！就是' + data.name;
+    resultEl.className = 'guess-result correct';
+    // 揭晓城市名
+    const cityEl = document.getElementById('modalCity');
+    cityEl.textContent = data.name;
+    cityEl.classList.remove('hidden-city');
+    cityRevealed = true;
+  } else {
+    resultEl.textContent = '❌ 不对哦，再试试？';
+    resultEl.className = 'guess-result wrong';
+  }
+}
+
+// ====== 看城市听音乐 ======
+function revealCity() {
+  const data = cityData[currentCity];
+  if (!data) return;
+
+  // 显示城市名
+  const cityEl = document.getElementById('modalCity');
+  cityEl.textContent = data.name;
+  cityEl.classList.remove('hidden-city');
+  cityRevealed = true;
+
+  // 隐藏模式按钮
+  document.getElementById('modalActions').style.display = 'none';
+
+  // 显示试听按钮
+  document.getElementById('listenBtn').classList.add('active');
+}
+
+// ====== 试听歌曲 ======
+function playMusic() {
+  const data = cityData[currentCity];
+  if (!data) return;
+
+  if (data.hasLocalAudio) {
+    playAudio(data.audio);
+    document.getElementById('audioPlayer').classList.add('active');
+    document.getElementById('listenBtn').classList.remove('active');
+  } else {
+    const query = encodeURIComponent(data.music.replace(/[《》]/g, ''));
+    window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+  }
+}
+
+// ====== 关闭卡片 ======
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
+
+  // 恢复唱片旋转
+  document.getElementById('vinyl').classList.remove('paused');
+
+  // 停止音频
+  const audio = document.getElementById('cityAudio');
+  audio.pause();
+  audio.currentTime = 0;
+
+  currentCity = null;
 }
 
 function closeModalOutside(e) {
@@ -950,94 +789,9 @@ function closeModalOutside(e) {
   }
 }
 
-// ====== 图片选择 ======
-function handleImageSelect(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  if (file.size > 2 * 1024 * 1024) {
-    showToast('图片不能超过2MB');
-    e.target.value = '';
-    return;
-  }
-
-  compressImage(file, 800, function(base64) {
-    uploadedImage = base64;
-    const preview = document.getElementById('previewImg');
-    preview.src = base64;
-    preview.style.display = 'block';
-    document.querySelector('.image-upload .upload-icon').style.display = 'none';
-    document.querySelector('.image-upload .upload-text').style.display = 'none';
-  });
-}
-
-// ====== 提交卡片 ======
-function submitCard() {
-  const city = document.getElementById('cityInput').value.trim();
-  const music = document.getElementById('musicInput').value.trim();
-
-  if (!city) {
-    showToast('请输入城市名称');
-    return;
-  }
-  if (!music) {
-    showToast('请输入音乐名称');
-    return;
-  }
-
-  const newCard = {
-    id: Date.now(),
-    image: uploadedImage || '',
-    city: city,
-    music: music,
-    isSample: false
-  };
-
-  cards.push(newCard);
-  saveData();
-
-  // 更新过滤
-  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (!keyword || city.toLowerCase().includes(keyword)) {
-    filteredCards = keyword
-      ? cards.filter(c => c.city.toLowerCase().includes(keyword))
-      : [...cards];
-    currentIndex = filteredCards.length - 1;
-  }
-
-  renderCards();
-  closeModal();
-  showToast('回忆已添加 ✨');
-}
-
-// ====== 删除卡片 ======
-function deleteCard(filteredIndex) {
-  const card = filteredCards[filteredIndex];
-  const realIndex = cards.findIndex(c => c.id === card.id);
-  if (realIndex === -1) return;
-
-  cards.splice(realIndex, 1);
-  saveData();
-
-  // 重新过滤
-  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-  filteredCards = keyword
-    ? cards.filter(c => c.city.toLowerCase().includes(keyword))
-    : [...cards];
-
-  if (currentIndex >= filteredCards.length) {
-    currentIndex = Math.max(0, filteredCards.length - 1);
-  }
-
-  renderCards();
-  showToast('已删除');
-}
-
-// ====== 试听音乐 ======
-function listenMusic(filteredIndex) {
-  const card = filteredCards[filteredIndex];
-  const query = encodeURIComponent(card.music.replace(/[《》]/g, ''));
-  window.open(`https://music.163.com/#/search/m/?s=${query}`, '_blank');
+// ====== 跳转便签板 ======
+function goToMemo() {
+  window.location.href = 'memo.html';
 }
 
 // ====== 提示消息 ======
@@ -1045,40 +799,16 @@ function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2000);
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-// ====== 重置数据 ======
-function resetData() {
-  if (confirm('确定要重置所有回忆数据吗？此操作不可撤销。')) {
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-}
-
-// ====== 返回唱片机 ======
-function goToTurntable() {
-  window.location.href = 'turntable.html';
-}
-
-// ====== 工具函数 ======
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// ====== 初始化 ======
+// ====== 回车提交猜测 ======
 document.addEventListener('DOMContentLoaded', function() {
-  loadData();
-  initSampleData();
-  filteredCards = [...cards];
-  currentIndex = 0;
-  renderCards();
+  document.getElementById('guessInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      submitGuess();
+    }
+  });
 });
 </script>
 
